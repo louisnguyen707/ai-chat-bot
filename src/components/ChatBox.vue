@@ -29,7 +29,7 @@ onUpdated(async () => {
       v-if="loading"
       class="w-full"
     >
-      <div class="mx-auto flex max-w-3xl items-start gap-3">
+      <div class="mx-auto flex max-w-4xl items-start gap-3">
         <div class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-semibold text-white">
           AI
         </div>

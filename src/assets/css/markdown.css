@@ -54,3 +54,30 @@
   border: 0;
   padding: 0;
 }
+
+:root {
+  --scrollbarwidth: 6px;
+}
+
+.scrollbar-custom {
+  scrollbar-width: thin;
+  scrollbar-color: #e7e9e9 #f8fafd;
+}
+
+.scrollbar-custom::-webkit-scrollbar {
+  width: var(--scrollbarwidth);
+  height: var(--scrollbarwidth);
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: #f8fafd;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background-color: #e7e9e9;
+  border-radius: 4px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: #999393;
+}

@@ -7,18 +7,25 @@ onMounted(() => {
   chatStore.loadConversations()
 })
 
+const abortController = ref<AbortController | null>(null)
+
 const sendMessage = async (text: string) => {
+  if (chatStore.loading) return
   chatStore.setError('')
   chatStore.addMessage({ role: 'user', content: text })
   chatStore.setLoading(true)
+  abortController.value = new AbortController()
 
   try {
-    const res = await sendMessageToAI(chatStore.activeMessages)
+    const res = await sendMessageToAI(chatStore.activeMessages, abortController.value.signal)
     chatStore.addMessage({
       role: 'assistant',
       content: res.reply
     })
   } catch (err: any) {
+    if (err?.name === 'CanceledError' || err?.message === 'canceled') {
+      return
+    }
     const message =
       err?.response?.data?.error?.message ||
       err?.response?.data?.error ||
@@ -29,7 +36,12 @@ const sendMessage = async (text: string) => {
     setTimeout(() => {
       chatStore.setLoading(false)
     }, 1000)
+    abortController.value = null
   }
+}
+
+const stopSending = () => {
+  abortController.value?.abort()
 }
 </script>
 
@@ -54,7 +66,7 @@ const sendMessage = async (text: string) => {
             v-if="chatStore.error"
             class="px-4 pb-3 sm:px-6"
           >
-            <div class="mx-auto flex max-w-3xl items-start justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div class="mx-auto flex max-w-4xl items-start justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               <div class="flex items-start gap-3">
                 <div class="mt-0.5 text-red-500">!</div>
                 <div class="leading-6">
@@ -73,6 +85,7 @@ const sendMessage = async (text: string) => {
           <ChatInput
             :loading="chatStore.loading"
             @send="sendMessage"
+            @stop="stopSending"
           />
         </div>
       </div>

@@ -27,7 +27,7 @@ const rendered = computed(() => md.render(message.content))
 <template>
   <div class="w-full">
     <div
-      class="mx-auto flex max-w-3xl gap-3"
+      class="mx-auto flex max-w-4xl gap-3"
       :class="message.role === 'user' ? 'justify-end' : 'justify-start'"
     >
       <div
