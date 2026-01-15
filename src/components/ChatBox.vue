@@ -2,7 +2,7 @@
 const chatStore = useChatStore()
 const boxRef = ref<HTMLElement | null>(null)
 
-const messages = computed(() => chatStore.messages)
+const messages = computed(() => chatStore.activeMessages)
 const loading = computed(() => chatStore.loading)
 
 onUpdated(async () => {
