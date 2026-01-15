@@ -66,8 +66,9 @@
 
 .chat-markdown .md-copy-btn {
   position: absolute;
-  top: 0.5rem;
-  right: 0.6rem;
+  top: 0.35rem;
+  right: 0.45rem;
+  z-index: 2;
   border: 1px solid #e5e7eb;
   background: #ffffff;
   color: #4b5563;
@@ -76,12 +77,26 @@
   border-radius: 999px;
   line-height: 1;
   cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.chat-markdown .md-copy-check, .chat-markdown .md-copied-text {
+  display: none;
+}
+
+.chat-markdown .md-copy-btn.is-copied .md-copy-icon, .chat-markdown .md-copy-btn.is-copied .md-copy-text {
+  display: none;
+}
+
+.chat-markdown .md-copy-btn.is-copied .md-copy-check, .chat-markdown .md-copy-btn.is-copied .md-copied-text {
+  display: inline-flex;
 }
 
 .chat-markdown .md-copy-btn:hover {
   border-color: #d1d5db;
   color: #111827;
+  background: #f9fafb;
+  box-shadow: 0 4px 10px rgba(3, 50, 160, 0.12);
   transform: translateY(-1px);
 }
 
