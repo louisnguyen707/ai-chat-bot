@@ -1,0 +1,22 @@
+{
+  // https://nuxt.com/docs/guide/concepts/typescript
+  "extends": "./.nuxt/tsconfig.json",
+  "compileOnSave": true,
+  "compilerOptions": {
+    "lib": [
+      "esnext",
+      "esnext.asynciterable",
+      "dom"
+    ],
+    "jsx": "preserve",
+    "esModuleInterop": true,
+    "allowJs": true,
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "baseUrl": "./src",
+    "types": [
+      "@types/node"
+    ],
+    "module": "esnext"
+  }
+}
