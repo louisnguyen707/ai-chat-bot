@@ -2,11 +2,18 @@
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 
-const { message } = defineProps<{
+const { message, animate } = defineProps<{
   message: {
+    id: string
     role: 'user' | 'assistant'
     content: string
+    animated?: boolean
   }
+  animate?: boolean
+}>()
+
+const emit = defineEmits<{
+  (event: 'typed'): void
 }>()
 
 const md = new MarkdownIt({
@@ -58,7 +65,52 @@ md.renderer.rules.code_block = (tokens: { [x: string]: any }, idx: string|number
   return renderCodeBlock(token.content)
 }
 
-const rendered = computed(() => md.render(message.content))
+const displayedContent = ref(message.content)
+const isTyping = ref(false)
+let typingTimer: number | undefined
+
+const startTyping = (content: string, shouldAnimate: boolean) => {
+  if (message.role !== 'assistant' || !shouldAnimate) {
+    displayedContent.value = content
+    isTyping.value = false
+    return
+  }
+
+  if (typingTimer) {
+    window.clearInterval(typingTimer)
+  }
+
+  displayedContent.value = ''
+  isTyping.value = true
+  let index = 0
+  const total = content.length
+  const chunk = Math.max(1, Math.round(total / 120))
+
+  typingTimer = window.setInterval(() => {
+    index = Math.min(total, index + chunk)
+    displayedContent.value = content.slice(0, index)
+    if (index >= total) {
+      window.clearInterval(typingTimer)
+      typingTimer = undefined
+      isTyping.value = false
+      emit('typed')
+    }
+  }, 32)
+}
+
+watch(
+  [() => message.content, () => animate],
+  ([value, shouldAnimate]: any) => startTyping(value, Boolean(shouldAnimate)),
+  { immediate: true }
+)
+
+onBeforeUnmount(() => {
+  if (typingTimer) {
+    window.clearInterval(typingTimer)
+  }
+})
+
+const rendered = computed(() => md.render(displayedContent.value))
 
 const isMessageCopied = ref(false)
 let messageCopyTimer: number | undefined
@@ -144,12 +196,17 @@ const onCopyMessage = async () => {
           :class="message.role === 'user' ? 'items-end' : 'items-start'"
         >
           <div
-            class="relative w-full rounded-2xl border px-4 py-3 text-sm leading-6 shadow-sm"
+            class="relative w-full rounded-2xl px-4 py-3 text-sm leading-6"
             :class="message.role === 'user'
-              ? 'border-gray-200 bg-[#f7f7f8] text-gray-900'
-              : 'border-gray-200 bg-white text-gray-900'"
+              ? 'shadow-sm border border-gray-200 bg-[#f7f7f8] text-gray-900'
+              : 'text-gray-900'"
           >
             <div class="chat-markdown" v-html="rendered" @click="onMarkdownClick" />
+            <span
+              v-if="message.role === 'assistant' && isTyping"
+              class="typing-cursor"
+              aria-hidden="true"
+            ></span>
           </div>
           <button
             v-if="message.role === 'assistant'"
@@ -192,3 +249,27 @@ const onCopyMessage = async () => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.typing-cursor {
+  display: inline-block;
+  width: 0.5rem;
+  height: 1rem;
+  margin-left: 2px;
+  background: currentColor;
+  border-radius: 999px;
+  animation: typing-blink 1s steps(2, start) infinite;
+  vertical-align: text-bottom;
+}
+
+@keyframes typing-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+</style>

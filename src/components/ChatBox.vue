@@ -1,9 +1,33 @@
 <script setup lang="ts">
 const chatStore = useChatStore()
 const boxRef = ref<HTMLElement | null>(null)
+const animatedIndex = ref(-1)
 
 const messages = computed(() => chatStore.activeMessages)
 const loading = computed(() => chatStore.loading)
+
+onMounted(async () => {
+  animatedIndex.value = -1
+  await nextTick()
+  boxRef.value?.scrollTo({
+    behavior: 'smooth',
+    top: boxRef.value.scrollHeight
+  })
+})
+
+watch(
+  () => messages.value.length,
+  (length, previous) => {
+    if (previous === undefined) return
+    if (length <= previous) {
+      animatedIndex.value = length - 1
+      return
+    }
+
+    const lastMessage = messages.value[length - 1]
+    animatedIndex.value = lastMessage?.role === 'assistant' ? length - 1 : -1
+  }
+)
 
 onUpdated(async () => {
   await nextTick()
@@ -21,8 +45,10 @@ onUpdated(async () => {
   >
     <ChatMessage
       v-for="(msg, i) in messages"
-      :key="i"
+      :key="msg.id"
       :message="msg"
+      :animate="i === animatedIndex && !msg.animated"
+      @typed="chatStore.markMessageAnimated(msg.id)"
     />
 
     <div

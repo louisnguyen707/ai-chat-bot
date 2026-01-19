@@ -42,7 +42,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="border-t border-gray-200 bg-[#f7f7f8] px-4 py-4 sm:px-6">
+  <div class=" bg-[#f7f7f8] px-4 pb-4 sm:px-6">
     <div class="mx-auto flex max-w-4xl items-end gap-3 rounded-2xl border border-gray-200 bg-white px-3 py-2 shadow-sm">
       <textarea
         ref="textareaRef"

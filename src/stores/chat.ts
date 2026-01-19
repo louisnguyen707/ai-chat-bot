@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia'
 
 export interface Message {
+  id: string
   role: 'user' | 'assistant'
   content: string
+  animated?: boolean
 }
 
 export interface Conversation {
@@ -33,13 +35,19 @@ export const useChatStore = defineStore('chat', {
   },
 
   actions: {
-    addMessage(message: Message) {
+    addMessage(message: Omit<Message, 'id' | 'animated'> & Partial<Pick<Message, 'id' | 'animated'>>) {
       if (!this.activeId) {
         this.createConversation()
       }
       const conversation = this.conversations.find((chat) => chat.id === this.activeId)
       if (!conversation) return
-      conversation.messages.push(message)
+      const normalizedMessage: Message = {
+        id: message.id || `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        role: message.role,
+        content: message.content,
+        animated: message.animated ?? message.role !== 'assistant'
+      }
+      conversation.messages.push(normalizedMessage)
       if (message.role === 'user' && conversation.title === 'New chat') {
         conversation.title = message.content.trim().slice(0, 48) || 'New chat'
       }
@@ -87,12 +95,22 @@ export const useChatStore = defineStore('chat', {
             id: chat.id,
             title: typeof chat.title === 'string' ? chat.title : 'New chat',
             messages: Array.isArray(chat.messages)
-              ? chat.messages.filter(
-                  (msg) =>
-                    msg &&
-                    (msg.role === 'user' || msg.role === 'assistant') &&
-                    typeof msg.content === 'string'
-                )
+              ? chat.messages
+                  .filter(
+                    (msg) =>
+                      msg &&
+                      (msg.role === 'user' || msg.role === 'assistant') &&
+                      typeof msg.content === 'string'
+                  )
+                  .map((msg) => ({
+                    id:
+                      typeof msg.id === 'string'
+                        ? msg.id
+                        : `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+                    role: msg.role,
+                    content: msg.content,
+                    animated: true
+                  }))
               : [],
             updatedAt: typeof chat.updatedAt === 'number' ? chat.updatedAt : Date.now()
           }))
@@ -126,7 +144,12 @@ export const useChatStore = defineStore('chat', {
           {
             id,
             title: 'Imported chat',
-            messages,
+            messages: messages.map((msg) => ({
+              id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+              role: msg.role,
+              content: msg.content,
+              animated: true
+            })),
             updatedAt: Date.now()
           }
         ]
@@ -147,6 +170,17 @@ export const useChatStore = defineStore('chat', {
 
     setError(value: string) {
       this.error = value
+    },
+
+    markMessageAnimated(messageId: string) {
+      const conversation = this.conversations.find((chat) => chat.id === this.activeId)
+      if (!conversation) return
+      const message = conversation.messages.find((msg) => msg.id === messageId)
+      if (!message) return
+      if (!message.animated) {
+        message.animated = true
+        this.persistConversations()
+      }
     }
   }
 })
